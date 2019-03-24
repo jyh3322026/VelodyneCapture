@@ -35,11 +35,46 @@ set( CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ${CMAKE_MODULE_PATH} )
 set( PCAP_DIR "C:/Program Files/WpdPack" )
 find_package( PCAP )
 
+# Disable sleep while reading a pcap
+# Is is useful if you have to parse the result of a pcap faster than real
+# time.
+
+OPTION( HAVE_FAST_PCAP "Avoid sleeping whilst reading PCAP files " OFF )
+if( HAVE_FAST_PCAP )
+  add_definitions( -DHAVE_FAST_PCAP )
+endif()
+
 # If Capture from PCAP Files, VelodyneCapture are required PCAP.
 # Please Define HAVE_PCAP in Preprocessor.
 set( HAVE_PCAP )
 if( PCAP_FOUND )
   set( HAVE_PCAP "-DHAVE_PCAP" )
+endif()
+
+# Use GPS timestamps insead of Unix epoch
+# This is specially useful while reading PCAP files.
+OPTION( HAVE_GPSTIME "Use GPS timestamps instead of Unix " OFF )
+if( HAVE_GPSTIME )
+  add_definitions( -DHAVE_GPSTIME )
+endif()
+
+# Use millimeters instead of the default, centimeters.
+OPTION( USE_MILLIMETERS "Use millimeters instead of centimeters " OFF )
+if( USE_MILLIMETERS )
+  add_definitions( -DUSE_MILLIMETERS )
+endif()
+
+# Push data packets as soon as possible, if ndef the drivers push the 
+# whole frame
+OPTION( PUSH_SINGLE_PACKETS  "Push data packets to the stack instead of frames" OFF )
+if( PUSH_SINGLE_PACKETS )
+  add_definitions( -DPUSH_SINGLE_PACKETS )
+endif()
+
+# Don't push null returns to the lases queue
+OPTION( NO_EMPTY_RETURNS "Discard empty returns before pushing them to the laser queue" OFF )
+if( NO_EMPTY_RETURNS )
+  add_definitions( -DNO_EMPTY_RETURNS )
 endif()
 
 # Find Package OpenCV
@@ -78,7 +113,6 @@ if( OpenCV_FOUND AND ( PCAP_FOUND OR Boost_FOUND ) )
 
   # Additional Library Directories
   link_directories( ${Boost_LIBRARY_DIRS} )
-  link_directories( ${PCAP_LIBRARY_DIRS} )
   link_directories( ${OpenCV_LIB_DIR} )
 
   # Additional Dependencies
